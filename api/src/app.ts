@@ -1,9 +1,10 @@
 import express from "express";
 import cors from "cors";
 import type { Controller } from "./interfaces";
-import loggerMiddleware from "./middlewares/logger.middleware";
+import loggerMiddleware, {
+    morganMiddleware,
+} from "./middlewares/logger.middleware";
 import { errorHandler } from "./middlewares/error-handler.middleware";
-import { validateData } from "./middlewares/validate-data.middleware";
 
 /**
  *
@@ -23,8 +24,9 @@ class App {
         this.app = express();
         this.port = port;
 
-        this.initializeMiddlewares();
+        this.initializeBeforeBootMiddlewares();
         this.initializeControllers(controllers);
+        this.initializeAfterBootMiddlewares();
     }
 
     /**
@@ -43,13 +45,23 @@ class App {
      * @private
      * @memberof App
      */
-    private initializeMiddlewares() {
+    private initializeBeforeBootMiddlewares() {
+        // // access log (compact) -> use morgan which forwards to Winston
+        // this.app.use(morganMiddleware);
+
+        // request logging (detailed) - keep existing middleware which logs body/params
         this.app.use(loggerMiddleware);
-        this.app.use(errorHandler);
-        this.app.use(validateData);
+
+        // body parsers and CORS
         this.app.use(cors());
         this.app.use(express.json());
         this.app.use(express.urlencoded({ extended: true }));
+    }
+
+    private initializeAfterBootMiddlewares() {
+        // additional middlewares can be added here
+        // Error handler must be mounted after routes so it can catch thrown errors
+        this.app.use(errorHandler);
     }
 
     /**
