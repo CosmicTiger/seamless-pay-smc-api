@@ -1,10 +1,9 @@
 import express from "express";
 import cors from "cors";
 import type { Controller } from "./interfaces";
-import loggerMiddleware, {
-    morganMiddleware,
-} from "./middlewares/logger.middleware";
+import loggerMiddleware from "./middlewares/logger.middleware";
 import { errorHandler } from "./middlewares/error-handler.middleware";
+import { apiReference } from "@scalar/express-api-reference";
 
 /**
  *
@@ -62,6 +61,14 @@ class App {
         // additional middlewares can be added here
         // Error handler must be mounted after routes so it can catch thrown errors
         this.app.use(errorHandler);
+
+        this.app.use(
+            "/docs",
+            apiReference({
+                theme: "purple",
+                url: "/openapi.json",
+            })
+        );
     }
 
     /**

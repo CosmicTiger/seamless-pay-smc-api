@@ -2,9 +2,11 @@ import App from "./app";
 import appConfig from "./core/config/app.config";
 import { AuthController, OrderController } from "./controllers";
 import { OrderService, BlockchainIndexerService } from "./services";
+import AuthService from "./services/auth.service";
 
 // Initialize services
 const orderService = new OrderService(appConfig.escrow.contractAddress);
+const authService = new AuthService();
 
 // Initialize blockchain indexer
 const blockchainIndexer = new BlockchainIndexerService(
@@ -17,15 +19,17 @@ const blockchainIndexer = new BlockchainIndexerService(
 
 // Start indexer if enabled
 if (appConfig.indexer.enabled) {
-    blockchainIndexer.start(appConfig.indexer.pollingIntervalMs).catch((error) => {
-        console.error("Failed to start blockchain indexer:", error);
-    });
+    blockchainIndexer
+        .start(appConfig.indexer.pollingIntervalMs)
+        .catch((error) => {
+            console.error("Failed to start blockchain indexer:", error);
+        });
 }
 
 // Initialize controllers
 const app = new App(
     [
-        new AuthController(),
+        new AuthController(authService),
         new OrderController(orderService),
         // new SmartContractsController(new SmartContractsService()), TODO: Enable when ready
     ],

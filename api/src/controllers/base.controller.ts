@@ -6,14 +6,14 @@ import type { Controller } from "../interfaces";
  * Subclasses should provide an implementation for `initializeRoutes`.
  */
 export default abstract class BaseController implements Controller {
-    public path: string;
+    public path: string = "/api/v1";
     public router: Router;
 
     /**
      * @param path - base path for the controller (e.g. '/auth')
      */
     constructor(path = "") {
-        this.path = path;
+        this.path = this.path + path;
         this.router = Router();
         // Call subclass implementation to register routes
         this.initializeRoutes();

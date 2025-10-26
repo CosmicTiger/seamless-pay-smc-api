@@ -12,19 +12,19 @@ export default class OrderController extends BaseController {
     private orderService: OrderService;
 
     constructor(orderService: OrderService) {
-        super("/api/v1/orders");
+        super("/orders");
         this.orderService = orderService;
     }
 
     protected initializeRoutes(): void {
         // POST /api/v1/orders - Create a new order
-        this.router.post("/", this.createOrder.bind(this));
+        this.router.post("/", this.createOrder);
 
         // GET /api/v1/orders/:orderId - Get order status
-        this.router.get("/:orderId", this.getOrderStatus.bind(this));
+        this.router.get("/:orderId", this.getOrderStatus);
 
         // POST /api/v1/orders/:orderId/release - Release order funds
-        this.router.post("/:orderId/release", this.releaseOrder.bind(this));
+        this.router.post("/:orderId/release", this.releaseOrder);
     }
 
     /**
@@ -115,7 +115,9 @@ export default class OrderController extends BaseController {
 
             // TODO: Call smart contract to release funds
             // For now, we'll simulate the transaction hash
-            const mockTxHash = `0x${Math.random().toString(16).substring(2, 66)}`;
+            const mockTxHash = `0x${Math.random()
+                .toString(16)
+                .substring(2, 66)}`;
 
             // Mark order as release pending
             const result = await this.orderService.markOrderAsReleasePending(

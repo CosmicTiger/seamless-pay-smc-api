@@ -1,9 +1,5 @@
-import {
-    createPublicClient,
-    http,
-    type Address,
-    type Log,
-} from "viem";
+import { createPublicClient, http, type Address, type Log } from "viem";
+import { getAddress } from "ethers";
 import type OrderService from "./order.service";
 
 /**
@@ -31,8 +27,25 @@ export default class BlockchainIndexerService {
             transport: http(rpcUrl),
             ...(chainId && { chain: { id: chainId } as any }),
         });
-        this.escrowAddress = escrowAddress;
-        this.pyusdAddress = pyusdAddress;
+        // Normalize addresses to checksum format to satisfy viem's validation
+        try {
+            this.escrowAddress = getAddress(String(escrowAddress)) as Address;
+        } catch (err) {
+            // If normalization fails, keep the original value and log a warning
+            console.warn(
+                "Failed to checksum escrowAddress:",
+                escrowAddress,
+                err
+            );
+            this.escrowAddress = escrowAddress;
+        }
+
+        try {
+            this.pyusdAddress = getAddress(String(pyusdAddress)) as Address;
+        } catch (err) {
+            console.warn("Failed to checksum pyusdAddress:", pyusdAddress, err);
+            this.pyusdAddress = pyusdAddress;
+        }
         this.orderService = orderService;
     }
 
@@ -154,13 +167,27 @@ export default class BlockchainIndexerService {
             }
 
             // Convert addresses from bytes32 to address format
-            const buyerAddress = `0x${from.slice(-40)}` as Address;
-            const escrowAddress = `0x${to.slice(-40)}` as Address;
+            const rawBuyer = `0x${from.slice(-40)}`;
+            const rawEscrow = `0x${to.slice(-40)}`;
+
+            // Normalize the sliced addresses to checksum format. If invalid, skip this log.
+            let buyerAddress: Address;
+            let escrowAddress: Address;
+            try {
+                buyerAddress = getAddress(rawBuyer) as Address;
+                escrowAddress = getAddress(rawEscrow) as Address;
+            } catch (err) {
+                console.warn(
+                    "Skipping transfer: invalid address extracted from topics",
+                    { rawBuyer, rawEscrow, err }
+                );
+                return;
+            }
 
             // Verify this is a transfer to our escrow
             if (
                 escrowAddress.toLowerCase() !==
-                this.escrowAddress.toLowerCase()
+                String(this.escrowAddress).toLowerCase()
             ) {
                 return;
             }
@@ -174,7 +201,9 @@ export default class BlockchainIndexerService {
             console.log(`Transaction hash: ${log.transactionHash}`);
 
             // Find matching pending order
-            const order = await this.orderService.findPendingOrderByAmount(amount);
+            const order = await this.orderService.findPendingOrderByAmount(
+                amount
+            );
 
             if (!order) {
                 console.warn(

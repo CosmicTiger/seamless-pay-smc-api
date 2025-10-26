@@ -41,14 +41,13 @@ const appConfig: Config = {
             "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
     },
     blockchain: {
-        rpcUrl:
-            process.env.BLOCKCHAIN_RPC_URL || "http://127.0.0.1:8545",
+        rpcUrl: process.env.BLOCKCHAIN_RPC_URL || "http://127.0.0.1:8545",
         chainId: Number(process.env.CHAIN_ID) || 11155111,
     },
     indexer: {
         pollingIntervalMs:
             Number(process.env.INDEXER_POLLING_INTERVAL_MS) || 5000,
-        enabled: process.env.INDEXER_ENABLED !== "false",
+        enabled: false,
     },
     database: {
         host: process.env.DB_HOST || "localhost",
