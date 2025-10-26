@@ -15,8 +15,11 @@ export default abstract class BaseController implements Controller {
     constructor(path = "") {
         this.path = this.path + path;
         this.router = Router();
-        // Call subclass implementation to register routes
-        this.initializeRoutes();
+        // Defer calling subclass route registration to allow subclass constructors
+        // to finish initialization (e.g. binding handlers, setting services).
+        // Using setImmediate ensures initializeRoutes runs on the next tick
+        // after the subclass constructor body has executed.
+        setImmediate(() => this.initializeRoutes());
     }
 
     /**

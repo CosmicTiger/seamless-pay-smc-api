@@ -1,8 +1,11 @@
 import App from "./app";
 import appConfig from "./core/config/app.config";
 import { AuthController, OrderController } from "./controllers";
-import { OrderService, BlockchainIndexerService } from "./services";
-import AuthService from "./services/auth.service";
+import {
+    OrderService,
+    BlockchainIndexerService,
+    AuthService,
+} from "./services";
 
 // Initialize services
 const orderService = new OrderService(appConfig.escrow.contractAddress);
@@ -29,7 +32,7 @@ if (appConfig.indexer.enabled) {
 // Initialize controllers
 const app = new App(
     [
-        new AuthController(authService),
+        new AuthController(),
         new OrderController(orderService),
         // new SmartContractsController(new SmartContractsService()), TODO: Enable when ready
     ],

@@ -14,6 +14,10 @@ export default class OrderController extends BaseController {
     constructor(orderService: OrderService) {
         super("/orders");
         this.orderService = orderService;
+        // Bind handlers so `this` refers to the controller instance when Express invokes them
+        this.createOrder = this.createOrder.bind(this);
+        this.getOrderStatus = this.getOrderStatus.bind(this);
+        this.releaseOrder = this.releaseOrder.bind(this);
     }
 
     protected initializeRoutes(): void {

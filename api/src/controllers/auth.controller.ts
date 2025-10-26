@@ -5,6 +5,7 @@ import { StatusCodes } from "http-status-codes";
 // NOTE: Validation
 import { validateData } from "../middlewares/validate-data.middleware";
 import {
+    challengeMessageSchema,
     verifySignatureSchema,
     userIdParamSchema,
     fillOutProfileSchema,
@@ -12,22 +13,33 @@ import {
 import { validateParams } from "../middlewares/validate-params.middleware";
 import type { UserIdParam, FillOutProfileBody } from "../schemas/user.schema";
 import type { z } from "zod";
-import type AuthService from "../services/auth.service";
+import { AuthService } from "../services";
 import type { User } from "../interfaces/user.interface";
 
+type ChallengeMessage = z.infer<typeof challengeMessageSchema>;
 type UserLogin = z.infer<typeof verifySignatureSchema>; // NOTE: This helps out to be interpreted as an interface in the actual endpoint.
 
-class AuthController extends BaseController {
+export default class AuthController extends BaseController {
     private authService: AuthService;
 
-    constructor(authService: AuthService) {
+    constructor() {
         super("/auth");
-        this.authService = authService;
+        this.authService = new AuthService();
+        // Bind handlers so `this` refers to the controller instance when Express invokes them
+        this.generateChallenge = this.generateChallenge.bind(this);
+        this.loginOrPushToRegister = this.loginOrPushToRegister.bind(this);
+        this.fillOutUserProfile = this.fillOutUserProfile.bind(this);
     }
 
     protected initializeRoutes() {
         this.router.post(
-            `${this.path}/loginOrPushToRegister`,
+            `${this.path}/generate-challenge`,
+            validateData(challengeMessageSchema), // NOTE: is a must to use `validateData()` in order to zod middleware takes place
+            this.generateChallenge
+        );
+
+        this.router.post(
+            `${this.path}/login-or-push-to-register`,
             validateData(verifySignatureSchema), // NOTE: is a must to use `validateData()` in order to zod middleware takes place
             this.loginOrPushToRegister
         );
@@ -38,6 +50,24 @@ class AuthController extends BaseController {
             validateData(fillOutProfileSchema),
             this.fillOutUserProfile
         );
+    }
+
+    private async generateChallenge(
+        req: Request<{}, any, ChallengeMessage>,
+        res: Response,
+        _next: NextFunction
+    ) {
+        // NOTE: At this point `req.body` has type `ChallengeMessage` and has been validated by Zod.
+        const { walletAddress } = req.body;
+
+        const challenge = await this.authService.generateChallengeMessage(
+            walletAddress
+        );
+
+        return res.status(StatusCodes.OK).json({
+            message: "Challenge message generated successfully",
+            data: { challenge },
+        });
     }
 
     /**
@@ -115,16 +145,12 @@ class AuthController extends BaseController {
                 updates
             );
 
-            return res
-                .status(StatusCodes.CREATED)
-                .json({
-                    message: "Registration successful",
-                    data: { user: updatedUser },
-                });
+            return res.status(StatusCodes.CREATED).json({
+                message: "Registration successful",
+                data: { user: updatedUser },
+            });
         } catch (err) {
             return next(err);
         }
     }
 }
-
-export default AuthController;

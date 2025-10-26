@@ -2,12 +2,43 @@ import { ethers } from "ethers";
 import { db } from "../db";
 import { users } from "../db/schema";
 import { eq } from "drizzle-orm";
-import { randomUUID } from "crypto";
+import crypto from "crypto";
+import { SiweMessage } from "siwe";
 import type { User } from "../interfaces/user.interface";
+import hardhatAppConfig from "../core/config/hardhat-app.config";
 
-class AuthService {
+export default class AuthService {
+    constructor() {}
+
     private generateUserId(): string {
-        return `USR-${randomUUID()}`;
+        return `USR-${crypto.randomUUID()}`;
+    }
+
+    public async generateChallengeMessage(
+        walletAddress: string
+    ): Promise<string> {
+        try {
+            const message = `Sign this message to prove you own the wallet: ${walletAddress}`;
+            const domain = "myapp.com";
+            const uri = "https://myapp.com";
+            const nonce = crypto.randomBytes(16).toString("hex");
+
+            const siweMessage = new SiweMessage({
+                domain,
+                address: walletAddress,
+                statement: message,
+                uri,
+                version: "1",
+                chainId: hardhatAppConfig.id,
+                nonce,
+                issuedAt: new Date().toISOString(),
+            });
+
+            return siweMessage.prepareMessage();
+        } catch (error) {
+            console.error("Error generating challenge message:", error);
+            throw new Error("Failed to generate challenge message");
+        }
     }
 
     public async verifySignature(
@@ -99,5 +130,3 @@ class AuthService {
         return this.getUserById(userId);
     }
 }
-
-export default AuthService;

@@ -1,5 +1,13 @@
 import { z } from "zod";
 
+export const challengeMessageSchema = z.object({
+    walletAddress: z
+        .string()
+        .min(1, {
+            message: "Wallet address is required to generate a challenge.",
+        }),
+});
+
 export const verifySignatureSchema = z.object({
     signature: z
         .string()

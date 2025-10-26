@@ -47,7 +47,7 @@ const appConfig: Config = {
     indexer: {
         pollingIntervalMs:
             Number(process.env.INDEXER_POLLING_INTERVAL_MS) || 5000,
-        enabled: false,
+        enabled: Boolean(process.env.INDEXER_ENABLED) || false,
     },
     database: {
         host: process.env.DB_HOST || "localhost",
