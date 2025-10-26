@@ -5,6 +5,7 @@ import {
     timestamp,
     pgEnum,
     text,
+    boolean,
 } from "drizzle-orm/pg-core";
 
 // Order status enum
@@ -33,6 +34,22 @@ export const orders = pgTable("orders", {
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
+// Users table
+export const users = pgTable("users", {
+    userId: varchar("user_id", { length: 255 }).primaryKey(),
+    walletAddress: varchar("wallet_address", { length: 42 }).notNull(),
+    firstName: varchar("first_name", { length: 100 }),
+    lastName: varchar("last_name", { length: 100 }),
+    email: varchar("email", { length: 255 }).notNull(),
+    phoneNumber: varchar("phone_number", { length: 20 }),
+    hasOwnBusiness: boolean("has_own_business").notNull().default(false),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
 // Type inference
 export type Order = typeof orders.$inferSelect;
 export type NewOrder = typeof orders.$inferInsert;
+
+export type User = typeof users.$inferSelect;
+export type NewUser = typeof users.$inferInsert;
