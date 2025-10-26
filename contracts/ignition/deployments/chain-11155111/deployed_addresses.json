@@ -1,0 +1,5 @@
+{
+  "FullSystemModule#MockPYUSD": "0x3EF331b1e62c3563cd176292476FBB7F79152226",
+  "FullSystemModule#PaymentEscrow": "0x909C299f55836Dbd1409B0889838558D45e37f14",
+  "PaymentEscrowModule#PaymentEscrow": "0xf43A12BDD996997705155c8b6b1C569FDc786966"
+}

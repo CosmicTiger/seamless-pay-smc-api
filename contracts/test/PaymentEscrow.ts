@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import hre from "hardhat";
-import { loadFixture } from "@nomicfoundation/hardhat-toolbox-viem/network-helpers";
+import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { parseUnits, keccak256, toHex } from "viem";
 
 describe("PaymentEscrow", function () {
