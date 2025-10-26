@@ -9,3 +9,8 @@
 
 # Coverage reports
 /coverage
+
+
+.env
+.env.local
+
