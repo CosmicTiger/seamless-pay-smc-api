@@ -1,57 +1,178 @@
-# Sample Hardhat 3 Beta Project (`node:test` and `viem`)
+# PaymentEscrow Smart Contracts
 
-This project showcases a Hardhat 3 Beta project using the native Node.js test runner (`node:test`) and the `viem` library for Ethereum interactions.
+Smart contracts for PYUSD payment escrow system on Ethereum (Sepolia testnet).
 
-To learn more about the Hardhat 3 Beta, please visit the [Getting Started guide](https://hardhat.org/docs/getting-started#getting-started-with-hardhat-3). To share your feedback, join our [Hardhat 3 Beta](https://hardhat.org/hardhat3-beta-telegram-group) Telegram group or [open an issue](https://github.com/NomicFoundation/hardhat/issues/new) in our GitHub issue tracker.
+This project uses Hardhat 3 with support for:
+- Solidity tests (Foundry-compatible)
+- TypeScript tests with `node:test` and `viem`
+- Deployment with Hardhat Ignition
+- Automatic verification on Blockscout/Etherscan
 
-## Project Overview
+## Contracts
 
-This example project includes:
+- **`PaymentEscrow.sol`** - Main escrow contract for PYUSD payments
+- **`MockPYUSD.sol`** - Mock PYUSD token for local testing
+- **`PaymentEscrow.t.sol`** - Complete Solidity test suite (19 tests)
 
-- A simple Hardhat configuration file.
-- Foundry-compatible Solidity unit tests.
-- TypeScript integration tests using [`node:test`](nodejs.org/api/test.html), the new Node.js native test runner, and [`viem`](https://viem.sh/).
-- Examples demonstrating how to connect to different types of networks, including locally simulating OP mainnet.
+## Tests
 
-## Usage
+### Run Solidity Tests
 
-### Running Tests
+To run the complete PaymentEscrow contract test suite:
 
-To run all the tests in the project, execute the following command:
+```shell
+npx hardhat test contracts/PaymentEscrow.t.sol
+```
+
+**Test Coverage (19 tests):**
+- ✅ Deployment and initial configuration
+- ✅ Escrow order creation
+- ✅ Buyer funding
+- ✅ Funds release to vendor
+- ✅ Refunds to buyer
+- ✅ Dispute handling
+- ✅ Fuzz testing (256 runs)
+- ✅ Complete end-to-end flow
+
+### Run All Tests
 
 ```shell
 npx hardhat test
 ```
 
-You can also selectively run the Solidity or `node:test` tests:
+Or selectively:
 
 ```shell
 npx hardhat test solidity
 npx hardhat test nodejs
 ```
 
-### Make a deployment to Sepolia
+## 🚀 Deployment
 
-This project includes an example Ignition module to deploy the contract. You can deploy this module to a locally simulated chain or to Sepolia.
+### Step 1: Variable Configuration
 
-To run the deployment to a local chain:
-
-```shell
-npx hardhat ignition deploy ignition/modules/Counter.ts
-```
-
-To run the deployment to Sepolia, you need an account with funds to send the transaction. The provided Hardhat configuration includes a Configuration Variable called `SEPOLIA_PRIVATE_KEY`, which you can use to set the private key of the account you want to use.
-
-You can set the `SEPOLIA_PRIVATE_KEY` variable using the `hardhat-keystore` plugin or by setting it as an environment variable.
-
-To set the `SEPOLIA_PRIVATE_KEY` config variable using `hardhat-keystore`:
+Configure environment variables using Hardhat Keystore (secure encrypted storage):
 
 ```shell
+# Set Sepolia RPC URL
+npx hardhat keystore set SEPOLIA_RPC_URL
+
+# Set your private key (you'll be prompted for an encryption password)
 npx hardhat keystore set SEPOLIA_PRIVATE_KEY
 ```
 
-After setting the variable, you can run the deployment with the Sepolia network:
+**Note:** You can also use a `.env` file with the following variables:
+```env
+SEPOLIA_RPC_URL=https://rpc.sepolia.org
+SEPOLIA_PRIVATE_KEY=0x...
+ETHERSCAN_API_KEY=your_api_key_here
+```
+
+### Step 2: Local Deployment (Testing)
+
+Deploy the complete system (MockPYUSD + PaymentEscrow) locally:
 
 ```shell
-npx hardhat ignition deploy --network sepolia ignition/modules/Counter.ts
+npx hardhat ignition deploy ignition/modules/FullSystem.ts
 ```
+
+### Step 3: Sepolia Testnet Deployment
+
+Deploy PaymentEscrow on Sepolia using real PYUSD:
+
+```shell
+npx hardhat ignition deploy ignition/modules/PaymentEscrow.ts --network sepolia
+```
+
+**Interactive Process:**
+1. You'll be prompted for the keystore password
+2. Confirm deployment to Sepolia (chain ID: 11155111)
+3. The contract will be deployed
+
+**Deployed Addresses (Example):**
+```
+PaymentEscrowModule#PaymentEscrow - 0xf43A12BDD996997705155c8b6b1C569FDc786966
+```
+
+### Step 4: Contract Verification
+
+Verify the contract on Blockscout/Etherscan:
+
+```shell
+npx hardhat verify --network sepolia \
+  0xf43A12BDD996997705155c8b6b1C569FDc786966 \
+  "0xCaC524BcA292aaade2DF8A05cC58F0a65B1B3bB9"
+```
+
+**Parameters:**
+- `0xf43A12BDD996997705155c8b6b1C569FDc786966` - Deployed contract address
+- `"0xCaC524BcA292aaade2DF8A05cC58F0a65B1B3bB9"` - PYUSD token address on Sepolia (constructor param)
+
+**Result:**
+```
+✅ Contract verified successfully on Blockscout!
+Explorer: https://eth-sepolia.blockscout.com/address/0xf43A12BDD996997705155c8b6b1C569FDc786966#code
+```
+
+### Available Ignition Modules
+
+- **`FullSystem.ts`** - Deploys MockPYUSD + PaymentEscrow (local testing)
+- **`PaymentEscrow.ts`** - Deploys only PaymentEscrow with real PYUSD (testnets/mainnet)
+- **`Counter.ts`** - Example contract
+
+## 🔑 PYUSD Configuration
+
+### Sepolia Testnet
+- **PYUSD Address:** `0xCaC524BcA292aaade2DF8A05cC58F0a65B1B3bB9`
+- **Decimals:** 6
+- **Faucet:** [PayPal Developer Portal](https://developer.paypal.com/)
+
+## Project Summary
+
+### Deployed Contracts
+| Contract | Address | Network | Explorer |
+|----------|---------|---------|----------|
+| PaymentEscrow | `0xf43A12BDD996997705155c8b6b1C569FDc786966` | Sepolia | [Blockscout](https://eth-sepolia.blockscout.com/address/0xf43A12BDD996997705155c8b6b1C569FDc786966#code) |
+| PYUSD (Testnet) | `0xCaC524BcA292aaade2DF8A05cC58F0a65B1B3bB9` | Sepolia | [Etherscan](https://sepolia.etherscan.io/token/0xCaC524BcA292aaade2DF8A05cC58F0a65B1B3bB9) |
+
+### PaymentEscrow Contract Functions
+
+- **createEscrow** - Creates a new escrow order (owner only)
+- **fundEscrow** - Buyer funds the escrow with PYUSD
+- **releaseFunds** - Releases funds to vendor (owner only)
+- **refundFunds** - Refunds funds to buyer (owner only)
+- **markAsDisputed** - Marks an order as disputed (owner only)
+- **getEscrow** - Gets order details
+- **orderExists** - Checks if an order exists
+- **getBalance** - Gets the contract's PYUSD balance
+
+## Tech Stack
+
+- **Hardhat 3** - Development framework
+- **Solidity 0.8.28** - Contract language
+- **Hardhat Ignition** - Deployment system
+- **Foundry (forge-std)** - Contract testing
+- **OpenZeppelin Contracts** - Secure libraries (Ownable, ReentrancyGuard, ERC20)
+- **Viem** - Ethereum client for TypeScript
+- **Hardhat Keystore** - Secure private key management
+
+## 📚 Additional Resources
+
+- [Hardhat 3 Documentation](https://hardhat.org/docs/learn-more/deploying-contracts)
+- [Hardhat Ignition](https://hardhat.org/ignition)
+- [OpenZeppelin Contracts](https://docs.openzeppelin.com/contracts)
+- [PYUSD Documentation](https://developer.paypal.com/community/blog/introducing-pyusd/)
+- [Blockscout Explorer](https://eth-sepolia.blockscout.com/)
+
+## Security
+
+- Uses `ReentrancyGuard` to prevent reentrancy attacks
+- Implements `Ownable` for access control
+- Custom errors for gas efficiency
+- 19 unit tests with 100% coverage of critical flows
+
+## Notes
+
+- The contract uses PYUSD which has **6 decimals** (not 18 like ETH)
+- Hardhat keystore encrypts your private keys with a password
+- Automatic verification works with Blockscout (Etherscan requires API key)
